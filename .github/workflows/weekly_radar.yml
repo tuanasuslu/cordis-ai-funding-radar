@@ -1,0 +1,36 @@
+name: Haftalik CORDIS AI Funding Radar
+
+on:
+  schedule:
+    # Her Pazartesi 09:00 Turkiye saati (UTC+3) = 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklari kur
+        run: pip install -r requirements.txt
+
+      - name: Radari calistir
+        run: python cordis_ai_funding_radar.py --countries DE,AT,CH --output ai_funding_radar_dach.xlsx
+
+      - name: Sonucu depoya geri yaz (degistiyse)
+        run: |
+          git config user.name "cordis-radar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add ai_funding_radar_dach.xlsx
+          git diff --cached --quiet && echo "Degisiklik yok, commit atlanidi." || git commit -m "Haftalik CORDIS AI funding radar guncellemesi ($(date -u +%Y-%m-%d))"
+          git push
