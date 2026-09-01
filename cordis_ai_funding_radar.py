@@ -1,6 +1,6 @@
 """
-CORDIS AI Funding Radar
-========================
+CORDIS Data & AI Funding Radar
+===============================
 
 Purpose
 -------
@@ -55,9 +55,15 @@ DATASET_PAGE = "https://data.europa.eu/data/datasets/cordis-eu-research-projects
 FALLBACK_CSV_ZIP = "https://cordis.europa.eu/data/cordis-HORIZONprojects-csv.zip"
 
 DEFAULT_KEYWORDS = [
+    # AI / ML
     "artificial intelligence", "machine learning", "deep learning",
     "neural network", "natural language processing", "computer vision",
     "generative ai", "large language model", "llm",
+    # Data & analytics - a data/AI consultancy's leads aren't only "AI companies"
+    "data analytics", "data science", "predictive analytics", "big data",
+    "data strategy", "business intelligence",
+    # Cloud & digital transformation
+    "cloud migration", "cloud computing", "digital transformation",
 ]
 
 # fundingScheme values that specifically mean EIC Accelerator (verified against
@@ -76,7 +82,7 @@ OUTPUT_COLUMNS = {
     "funding_signed_date": "Funding Signed Date",
     "eu_contribution_eur": "EU Contribution (EUR)",
     "fundingScheme": "Funding Scheme",
-    "ai_relevance": "AI Relevance",
+    "ai_relevance": "Tech Relevance",
     "science_domain": "Scientific/Technical Domain (not a sector - CORDIS classification)",
 }
 
@@ -120,24 +126,26 @@ def load_table(zf: zipfile.ZipFile, name_contains: str) -> pd.DataFrame:
 
 
 def tag_ai_relevance(projects: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
-    """Tag every project with how AI-central it is - does NOT filter anything out.
+    """Tag every project by how central data/AI/cloud work is to it - does NOT filter anything out.
 
-    A company doesn't need to be an "AI company" to be a lead - a growth/AI
-    consultancy can serve non-AI clients too, so any funded company is a
-    potential lead. Every project stays in the list; this just labels it "Core AI" (AI is
-    the project's own subject), "AI-adjacent" (AI/ML used as a tool within a
-    project about something else), or "Not AI-related" (no AI/ML mention at
-    all) so the eventual Excel/webpage can be sorted or filtered by relevance
-    without losing any leads.
+    A company doesn't need to be an "AI company" to be a lead - a data/AI
+    consultancy's real client base spans data analytics, BI, cloud, and
+    digital transformation work too, often at companies whose core business
+    is something else entirely. So every project stays in the list; this just
+    labels it "Core Tech Focus" (a data/AI/cloud term is in the project's own
+    title), "Tech-Adjacent" (mentioned only in the objective, i.e. used as a
+    tool within a project about something else), or "General Funding Lead"
+    (no such term at all) so the eventual Excel/webpage can be sorted or
+    filtered by relevance without losing any leads.
     """
     pattern = re.compile("|".join(re.escape(k) for k in keywords), re.IGNORECASE)
     title_hit = projects["title"].astype(str).str.contains(pattern, na=False) if "title" in projects.columns else pd.Series(False, index=projects.index)
     objective_hit = projects["objective"].astype(str).str.contains(pattern, na=False) if "objective" in projects.columns else pd.Series(False, index=projects.index)
 
     result = projects.copy()
-    result["ai_relevance"] = "Not AI-related (general funding lead)"
-    result.loc[objective_hit, "ai_relevance"] = "AI-adjacent (mentioned in objective)"
-    result.loc[title_hit, "ai_relevance"] = "Core AI (mentioned in title)"
+    result["ai_relevance"] = "General Funding Lead"
+    result.loc[objective_hit, "ai_relevance"] = "Tech-Adjacent (mentioned in objective)"
+    result.loc[title_hit, "ai_relevance"] = "Core Tech Focus (mentioned in title)"
     return result
 
 
@@ -230,7 +238,7 @@ def build_radar(keywords: list[str], countries: list[str] | None, output_path: s
 LIMITATIONS = [
     "Website info is frequently missing/stale in CORDIS - verify manually via the 'Website Search Link' column.",
     "Outside of EIC Accelerator, the exact funding amount per company is not broken out separately by CORDIS.",
-    "CORDIS only covers EU-funded projects; AI companies funded by VC/private equity are not in this list.",
+    "CORDIS only covers EU-funded projects; data/AI/tech companies funded by VC/private equity instead are not in this list.",
     "The 'Scientific/Technical Domain' column is CORDIS's own EuroSciVoc classification, not an official "
     "business sector (NACE/SIC) - CORDIS does not provide that data.",
 ]
@@ -266,7 +274,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>CORDIS AI Funding Radar - DACH</title>
+<title>CORDIS Data & AI Funding Radar - DACH</title>
 <style>
   :root {{ color-scheme: light; }}
   body {{ font-family: -apple-system, "Segoe UI", Arial, sans-serif; margin: 0; padding: 2rem;
@@ -299,7 +307,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-<h1>CORDIS AI Funding Radar &mdash; DACH</h1>
+<h1>CORDIS Data & AI Funding Radar &mdash; DACH</h1>
 <p class="subtitle">Germany / Austria / Switzerland &middot; Last updated: {generated_date}</p>
 
 <div class="info-box">
@@ -384,7 +392,7 @@ def _df_to_html_table(df: pd.DataFrame) -> str:
             elif col == ai_col:
                 if str(val).startswith("Core"):
                     cls = "tag-core"
-                elif str(val).startswith("AI-adjacent"):
+                elif str(val).startswith("Tech-Adjacent"):
                     cls = "tag-adj"
                 else:
                     cls = "tag-none"

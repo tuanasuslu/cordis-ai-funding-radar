@@ -1,13 +1,13 @@
-# CORDIS AI Funding Radar
+# CORDIS Data & AI Funding Radar
 
-![Weekly run](https://github.com/tuanasuslu/cordis-ai-funding-radar/actions/workflows/weekly_radar.yml/badge.svg)
+![Weekly run](https://github.com/tuanasuslu/cordis-data-ai-funding-radar/actions/workflows/weekly_radar.yml/badge.svg)
 
-**Live report:** https://tuanasuslu.github.io/cordis-ai-funding-radar/
+**Live report:** https://tuanasuslu.github.io/cordis-data-ai-funding-radar/
 
 A small automated pipeline that turns the EU's official CORDIS research-funding
 dataset into a usable lead list: every SME in Germany, Austria, and Switzerland
 that has received Horizon Europe / EIC Accelerator funding, tagged by how
-central AI is to their funded project.
+central data/AI/cloud work is to their funded project.
 
 ## What it does
 
@@ -18,10 +18,10 @@ central AI is to their funded project.
 3. Joins projects to their funded organisations, keeps only SMEs in the
    target countries, and splits results into two segments: **EIC
    Accelerator** and **Horizon Europe (general)**.
-4. Tags every row `Core AI`, `AI-adjacent`, or `Not AI-related` based on
-   whether AI/ML terms appear in the project title or objective - nothing is
-   filtered out, since a company doesn't need to be an "AI company" to be a
-   relevant lead.
+4. Tags every row `Core Tech Focus`, `Tech-Adjacent`, or `General Funding Lead`
+   based on whether data/AI/cloud terms appear in the project title or
+   objective - nothing is filtered out, since a company doesn't need to be a
+   pure "AI company" to be a relevant lead for a data & AI consultancy.
 5. Adds a ready-made Google search link for rows where CORDIS has no website
    on file (CORDIS's own contact data is frequently missing or stale - this
    script never guesses, it just makes manual verification one click away).
@@ -46,8 +46,8 @@ python cordis_ai_funding_radar.py --countries DE,AT,CH --output ai_funding_radar
   manually via the generated search link.
 - Outside of EIC Accelerator, CORDIS doesn't break out the exact funding
   amount per company within a multi-partner project.
-- CORDIS only covers EU-funded projects; AI companies funded by VC/private
-  equity don't appear here.
+- CORDIS only covers EU-funded projects; data/AI/tech companies funded by
+  VC/private equity instead don't appear here.
 - The "Scientific/Technical Domain" column is CORDIS's own EuroSciVoc
   classification, not a formal business sector (NACE/SIC) - CORDIS doesn't
   provide that data.
